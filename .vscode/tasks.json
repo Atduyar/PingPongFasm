@@ -1,0 +1,38 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build and run",
+			"type": "shell",
+			"dependsOrder": "sequence",
+			"dependsOn": ["build", "run"]
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"presentation": {
+				"revealProblems": "onProblem",
+			},
+			"linux": {
+				"command": "make"
+			},
+			"windows": {
+				"command": "make"
+			}
+		},
+		{
+			"label": "run",
+			"type": "shell",
+			"console": "externalTerminal",
+			"presentation": {
+				"revealProblems": "onProblem",
+			},
+			"linux": {
+				"command": "./game"
+			},
+			"windows": {
+				"command": ".\\game"
+			}
+		}
+	]
+}
