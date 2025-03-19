@@ -1,13 +1,11 @@
 format ELF64
 
-section '.text' executable
-
-public _start
-
+; Stdio
 extrn printf
 extrn puts
 extrn _exit
 
+; Raylib
 extrn InitWindow
 extrn SetConfigFlags
 extrn GetScreenWidth
@@ -23,8 +21,9 @@ extrn DrawCircle
 extrn EndDrawing
 extrn CloseWindow
 
+section '.text' executable
+public _start
 _start:
-
 	;void SetConfigFlags(unsigned int flags);                    // Setup init configuration flags (view FLAGS)
 	mov rdi, 0
 	;or rdi, [raylibConfigFlags.FLAG_FULLSCREEN_MODE]
@@ -41,7 +40,7 @@ _start:
     mov rdi, 60
     call SetTargetFPS
 
-.mainGameLoopStart:
+	.mainGameLoopStart:
 	;bool WindowShouldClose(void);                               // Check if application should close (KEY_ESCAPE pressed or windows close icon clicked)
 	call WindowShouldClose
 	test al, al
@@ -54,13 +53,45 @@ _start:
 	mov rdi, [pico.2]
 	call ClearBackground
 
-	;int GetScreenWidth(void);                                   // Get current screen width
-	call GetScreenWidth
-	mov [windowSize.width], eax
-	;int GetScreenHeight(void);                                  // Get current screen height
-	call GetScreenHeight
-	mov [windowSize.height], eax
+	; Updates
+	call UpdateWindowSize
+	call HandlePedalLogic
+	call HandleBallLogic
 
+	; Draws
+	call DrawPedal
+	call DrawBall
+
+	;void EndDrawing(void);                                      // End canvas drawing and swap buffers (double buffering)
+	call EndDrawing
+
+	jmp .mainGameLoopStart
+	.mainGameLoopEnd:
+
+	call CloseWindow
+	mov rdi, 0
+	call _exit
+
+DrawPedal:
+	;void DrawRectangleLines(int posX, int posY, int width, int height, Color color);                   // Draw rectangle outline
+	mov rdi, [pedal_l.x]
+	mov rsi, [pedal_l.y]
+	mov rdx, [pedal.width]
+	mov rcx, [pedal.height]
+	mov r8, [pico.7]
+	call DrawRectangle
+	ret
+
+DrawBall:
+	; void DrawCircle(int centerX, int centerY, float radius, Color color); // Draws circle
+	mov rdi, [ball.x]
+	mov rsi, [ball.y]
+	movd xmm0, [ball.r]
+	mov rdx, [pico.8]
+	call DrawCircle
+	ret
+
+HandlePedalLogic:
 	;bool IsKeyPressed(int key);                             // Check if a key has been pressed once
 	mov rdi, [ratlibKeyboardKey.KEY_DOWN]
 	call IsKeyDown
@@ -78,54 +109,9 @@ _start:
 	je .EndPressUp
 	sub qword[pedal_l.y], 5
 	.EndPressUp:
+	ret
 
-	;void DrawRectangleLines(int posX, int posY, int width, int height, Color color);                   // Draw rectangle outline
-	mov rdi, [pedal_l.x]
-	mov rsi, [pedal_l.y]
-	mov rdx, [pedal.width]
-	mov rcx, [pedal.height]
-	mov r8, [pico.7]
-	call DrawRectangle
-
-	; We can maybe combine handling ball logic and drawing if you wish
-	jmp .drawBall
-	.drawBallEnd:
-		; End for the drawing ball
-	jmp .handleBallLogic
-	.handleBallLogicEnd:
-		; Ball Logic Ends Here
-
-	;void EndDrawing(void);                                      // End canvas drawing and swap buffers (double buffering)
-	call EndDrawing
-
-	jmp .mainGameLoopStart
-.mainGameLoopEnd:
-
-;.loop:
-;	jmp .loop
-
-	call CloseWindow
-	mov rdi, 0
-	call _exit
-
-.drawBall:
-	; void DrawCircle(int centerX, int centerY, float radius, Color color); // Draws circle
-	mov rdi, [ball.x]
-	mov rsi, [ball.y]
-	movd xmm0, [ball.r]
-	mov rdx, [pico.8]
-	call DrawCircle
-
-	jmp .drawBallEnd
-
-.handleBallLogic:
-	jmp .updateBallPosition
-	.updateBallPositionEnd:
-		; End
-
-	jmp .handleBallLogicEnd
-
-.updateBallPosition:
+HandleBallLogic:
 	; This part handles moving on X axis (left/right)
 
 	mov rsi, [ball.moveSpeed] ; We hold movement speed in rsi so we can reuse it later
@@ -151,8 +137,16 @@ _start:
 	.updateBallPositionMoveUp:
 		sub qword[ball.y], rsi
 	.updateBallPositionMoveUpEnd:
+	ret
 
-	jmp .updateBallPositionEnd
+UpdateWindowSize:
+	;int GetScreenWidth(void);                                   // Get current screen width
+	call GetScreenWidth
+	mov [windowSize.width], eax
+	;int GetScreenHeight(void);                                  // Get current screen height
+	call GetScreenHeight
+	mov [windowSize.height], eax
+	ret
 
 section '.data' writeable
 windowSize:
