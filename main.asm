@@ -16,6 +16,8 @@ extrn SetTargetFPS
 extrn WindowShouldClose
 extrn BeginDrawing
 extrn ClearBackground
+extrn IsKeyPressed
+extrn IsKeyDown
 extrn DrawRectangle
 extrn EndDrawing
 extrn CloseWindow
@@ -57,6 +59,24 @@ _start:
 	;int GetScreenHeight(void);                                  // Get current screen height
 	call GetScreenHeight
 	mov [windowSize.height], eax
+
+	;bool IsKeyPressed(int key);                             // Check if a key has been pressed once
+	mov rdi, [ratlibKeyboardKey.KEY_DOWN]
+	call IsKeyDown
+
+	test al, al
+	je .EndPressDown
+	add qword[pedal_l.y], 5
+	.EndPressDown:
+
+	;bool IsKeyPressed(int key);                             // Check if a key has been pressed once
+	mov rdi, [ratlibKeyboardKey.KEY_UP]
+	call IsKeyDown
+
+	test al, al
+	je .EndPressUp
+	sub qword[pedal_l.y], 5
+	.EndPressUp:
 
 	mov rdi, print_int
 	mov rsi, [windowSize.height]
@@ -137,6 +157,122 @@ raylibConfigFlags:
 	.FLAG_BORDERLESS_WINDOWED_MODE: dd 0x00008000   ; Set to run program in borderless windowed mode
 	.FLAG_MSAA_4X_HINT:             dd 0x00000020   ; Set to try enabling MSAA 4X
 	.FLAG_INTERLACED_HINT:          dd 0x00010000   ; Set to try enabling interlaced video format (for V3D)
+
+ratlibKeyboardKey:
+	.KEY_NULL:            dd 0        ; Key: NULL, used for no key pressed
+    ; Alphanumeric keys
+	.KEY_APOSTROPHE:      dd 39       ; Key: '
+	.KEY_COMMA:           dd 44       ; Key: ,
+	.KEY_MINUS:           dd 45       ; Key: -
+	.KEY_PERIOD:          dd 46       ; Key: .
+	.KEY_SLASH:           dd 47       ; Key: /
+	.KEY_ZERO:            dd 48       ; Key: 0
+	.KEY_ONE:             dd 49       ; Key: 1
+	.KEY_TWO:             dd 50       ; Key: 2
+	.KEY_THREE:           dd 51       ; Key: 3
+	.KEY_FOUR:            dd 52       ; Key: 4
+	.KEY_FIVE:            dd 53       ; Key: 5
+	.KEY_SIX:             dd 54       ; Key: 6
+	.KEY_SEVEN:           dd 55       ; Key: 7
+	.KEY_EIGHT:           dd 56       ; Key: 8
+	.KEY_NINE:            dd 57       ; Key: 9
+	.KEY_SEMICOLON:       dd 59       ; Key: ;
+	.KEY_EQUAL:           dd 61       ; Key: =
+	.KEY_A:               dd 65       ; Key: A | a
+	.KEY_B:               dd 66       ; Key: B | b
+	.KEY_C:               dd 67       ; Key: C | c
+	.KEY_D:               dd 68       ; Key: D | d
+	.KEY_E:               dd 69       ; Key: E | e
+	.KEY_F:               dd 70       ; Key: F | f
+	.KEY_G:               dd 71       ; Key: G | g
+	.KEY_H:               dd 72       ; Key: H | h
+	.KEY_I:               dd 73       ; Key: I | i
+	.KEY_J:               dd 74       ; Key: J | j
+	.KEY_K:               dd 75       ; Key: K | k
+	.KEY_L:               dd 76       ; Key: L | l
+	.KEY_M:               dd 77       ; Key: M | m
+	.KEY_N:               dd 78       ; Key: N | n
+	.KEY_O:               dd 79       ; Key: O | o
+	.KEY_P:               dd 80       ; Key: P | p
+	.KEY_Q:               dd 81       ; Key: Q | q
+	.KEY_R:               dd 82       ; Key: R | r
+	.KEY_S:               dd 83       ; Key: S | s
+	.KEY_T:               dd 84       ; Key: T | t
+	.KEY_U:               dd 85       ; Key: U | u
+	.KEY_V:               dd 86       ; Key: V | v
+	.KEY_W:               dd 87       ; Key: W | w
+	.KEY_X:               dd 88       ; Key: X | x
+	.KEY_Y:               dd 89       ; Key: Y | y
+	.KEY_Z:               dd 90       ; Key: Z | z
+	.KEY_LEFT_BRACKET:    dd 91       ; Key: [
+	.KEY_BACKSLASH:       dd 92       ; Key: '\'
+	.KEY_RIGHT_BRACKET:   dd 93       ; Key: ]
+	.KEY_GRAVE:           dd 96       ; Key: `
+    ; Function keys
+	.KEY_SPACE:           dd 32       ; Key: Space
+	.KEY_ESCAPE:          dd 256      ; Key: Esc
+	.KEY_ENTER:           dd 257      ; Key: Enter
+	.KEY_TAB:             dd 258      ; Key: Tab
+	.KEY_BACKSPACE:       dd 259      ; Key: Backspace
+	.KEY_INSERT:          dd 260      ; Key: Ins
+	.KEY_DELETE:          dd 261      ; Key: Del
+	.KEY_RIGHT:           dd 262      ; Key: Cursor right
+	.KEY_LEFT:            dd 263      ; Key: Cursor left
+	.KEY_DOWN:            dd 264      ; Key: Cursor down
+	.KEY_UP:              dd 265      ; Key: Cursor up
+	.KEY_PAGE_UP:         dd 266      ; Key: Page up
+	.KEY_PAGE_DOWN:       dd 267      ; Key: Page down
+	.KEY_HOME:            dd 268      ; Key: Home
+	.KEY_END:             dd 269      ; Key: End
+	.KEY_CAPS_LOCK:       dd 280      ; Key: Caps lock
+	.KEY_SCROLL_LOCK:     dd 281      ; Key: Scroll down
+	.KEY_NUM_LOCK:        dd 282      ; Key: Num lock
+	.KEY_PRINT_SCREEN:    dd 283      ; Key: Print screen
+	.KEY_PAUSE:           dd 284      ; Key: Pause
+	.KEY_F1:              dd 290      ; Key: F1
+	.KEY_F2:              dd 291      ; Key: F2
+	.KEY_F3:              dd 292      ; Key: F3
+	.KEY_F4:              dd 293      ; Key: F4
+	.KEY_F5:              dd 294      ; Key: F5
+	.KEY_F6:              dd 295      ; Key: F6
+	.KEY_F7:              dd 296      ; Key: F7
+	.KEY_F8:              dd 297      ; Key: F8
+	.KEY_F9:              dd 298      ; Key: F9
+	.KEY_F10:             dd 299      ; Key: F10
+	.KEY_F11:             dd 300      ; Key: F11
+	.KEY_F12:             dd 301      ; Key: F12
+	.KEY_LEFT_SHIFT:      dd 340      ; Key: Shift left
+	.KEY_LEFT_CONTROL:    dd 341      ; Key: Control left
+	.KEY_LEFT_ALT:        dd 342      ; Key: Alt left
+	.KEY_LEFT_SUPER:      dd 343      ; Key: Super left
+	.KEY_RIGHT_SHIFT:     dd 344      ; Key: Shift right
+	.KEY_RIGHT_CONTROL:   dd 345      ; Key: Control right
+	.KEY_RIGHT_ALT:       dd 346      ; Key: Alt right
+	.KEY_RIGHT_SUPER:     dd 347      ; Key: Super right
+	.KEY_KB_MENU:         dd 348      ; Key: KB menu
+    ; Keypad keys
+	.KEY_KP_0:            dd 320      ; Key: Keypad 0
+	.KEY_KP_1:            dd 321      ; Key: Keypad 1
+	.KEY_KP_2:            dd 322      ; Key: Keypad 2
+	.KEY_KP_3:            dd 323      ; Key: Keypad 3
+	.KEY_KP_4:            dd 324      ; Key: Keypad 4
+	.KEY_KP_5:            dd 325      ; Key: Keypad 5
+	.KEY_KP_6:            dd 326      ; Key: Keypad 6
+	.KEY_KP_7:            dd 327      ; Key: Keypad 7
+	.KEY_KP_8:            dd 328      ; Key: Keypad 8
+	.KEY_KP_9:            dd 329      ; Key: Keypad 9
+	.KEY_KP_DECIMAL:      dd 330      ; Key: Keypad .
+	.KEY_KP_DIVIDE:       dd 331      ; Key: Keypad /
+	.KEY_KP_MULTIPLY:     dd 332      ; Key: Keypad *
+	.KEY_KP_SUBTRACT:     dd 333      ; Key: Keypad -
+	.KEY_KP_ADD:          dd 334      ; Key: Keypad +
+	.KEY_KP_ENTER:        dd 335      ; Key: Keypad Enter
+	.KEY_KP_EQUAL:        dd 336      ; Key: Keypad =
+    ; Android key buttons
+	.KEY_BACK:            dd 4        ; Key: Android back button
+	.KEY_MENU:            dd 5        ; Key: Android menu button
+	.KEY_VOLUME_UP:       dd 24       ; Key: Android volume up button
+	.KEY_VOLUME_DOWN:     dd 25       ; Key: Android volume down button
 
 
 section '.note.GNU-stack'
