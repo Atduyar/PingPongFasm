@@ -43,7 +43,7 @@ _start:
 .mainGameLoopStart:
 	;bool WindowShouldClose(void);                               // Check if application should close (KEY_ESCAPE pressed or windows close icon clicked)
 	call WindowShouldClose
-	test eax, eax
+	test al, al
 	jne .mainGameLoopEnd
 
 	;void BeginDrawing(void);                                    // Setup canvas (framebuffer) to start drawing
