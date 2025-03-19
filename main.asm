@@ -19,6 +19,7 @@ extrn ClearBackground
 extrn IsKeyPressed
 extrn IsKeyDown
 extrn DrawRectangle
+extrn DrawCircle
 extrn EndDrawing
 extrn CloseWindow
 
@@ -78,10 +79,6 @@ _start:
 	sub qword[pedal_l.y], 5
 	.EndPressUp:
 
-	mov rdi, print_int
-	mov rsi, [windowSize.height]
-	call printf
-
 	;void DrawRectangleLines(int posX, int posY, int width, int height, Color color);                   // Draw rectangle outline
 	mov rdi, [pedal_l.x]
 	mov rsi, [pedal_l.y]
@@ -89,19 +86,73 @@ _start:
 	mov rcx, [pedal.height]
 	mov r8, [pico.7]
 	call DrawRectangle
-    
+
+	; We can maybe combine handling ball logic and drawing if you wish
+	jmp .drawBall
+	.drawBallEnd:
+		; End for the drawing ball
+	jmp .handleBallLogic
+	.handleBallLogicEnd:
+		; Ball Logic Ends Here
+
 	;void EndDrawing(void);                                      // End canvas drawing and swap buffers (double buffering)
 	call EndDrawing
 
 	jmp .mainGameLoopStart
 .mainGameLoopEnd:
-	
+
 ;.loop:
 ;	jmp .loop
 
 	call CloseWindow
 	mov rdi, 0
 	call _exit
+
+.drawBall:
+	; void DrawCircle(int centerX, int centerY, float radius, Color color); // Draws circle
+	mov rdi, [ball.x]
+	mov rsi, [ball.y]
+	movd xmm0, [ball.r]
+	mov rdx, [pico.8]
+	call DrawCircle
+
+	jmp .drawBallEnd
+
+.handleBallLogic:
+	jmp .updateBallPosition
+	.updateBallPositionEnd:
+		; End
+
+	jmp .handleBallLogicEnd
+
+.updateBallPosition:
+	; This part handles moving on X axis (left/right)
+
+	mov rsi, [ball.moveSpeed] ; We hold movement speed in rsi so we can reuse it later
+
+	mov al, [ball.moveX]
+	test al, al ; Is al == 0?
+	jnz .updateBallPositionMoveLeft ; Not? Okay, move left
+	add qword[ball.x], rsi ; Yes? Okay, move right
+	jmp .updateBallPositionMoveLeftEnd
+
+	.updateBallPositionMoveLeft:
+		sub qword[ball.x], rsi
+	.updateBallPositionMoveLeftEnd:
+
+	; This part handles moving on Y axis (up/down)
+
+	mov al, [ball.moveY]
+	test al, al ; Is al == 0?
+	jnz .updateBallPositionMoveUp ; Not? Okay, move up
+	add qword[ball.y], rsi ; Yes? Okay, move down
+	jmp .updateBallPositionMoveUpEnd
+
+	.updateBallPositionMoveUp:
+		sub qword[ball.y], rsi
+	.updateBallPositionMoveUpEnd:
+
+	jmp .updateBallPositionEnd
 
 section '.data' writeable
 windowSize:
@@ -116,6 +167,13 @@ pedal_l:
 pedal_r:
 	.x: dd 10
 	.y: dd 400
+ball:
+	.x: dd 400
+	.y: dd 225
+	.r: dd 15.0
+	.moveX: db 0 ; 1 = Moves Left, 0 = Moves Right
+	.moveY: db 1 ; 1 = Moves Up, 0 = Moves Down
+	.moveSpeed: dd 5 ; Movement speed of the ball, for easier changing
 
 section '.rodata'
 print_int: db "test: %d",10,0
