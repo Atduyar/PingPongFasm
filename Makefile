@@ -9,4 +9,4 @@ main.o: main.asm
 	$(FASM2) main.asm 
 
 clear:
-	rm -r game main.o
+	rm -r PingPongFasm main.o
