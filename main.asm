@@ -169,6 +169,63 @@ HandleBallLogic:
 	.skipLowerBounce:
 		; Skipped
 
+	call CheckLeftPaddleCollision
+
+	ret
+
+CheckLeftPaddleCollision:
+
+	; if ball.x - ball.r <= paddle.x + paddle.width &&
+	; (ball.y + ball.r >= pedal.y && ball.y + ball.r <= pedal.y + pedal.height) ||
+	; (ball.y - ball.r >= pedal.y && ball.y - ball.r <= pedal.y + pedal.height)
+
+	; ball.x - ball.r <= paddle.x + paddle.width
+	mov edx, [ball.x]
+	sub edx, [ball.copyR]
+	mov ecx, [pedal_l.x]
+	add ecx, [pedal.width]
+	cmp edx, ecx
+	jg .skipCollision
+
+	; ball.y + ball.r >= pedal.y
+	mov edx, [ball.y]
+	add edx, [ball.copyR]
+	mov ecx, [pedal_l.y]
+	cmp edx, ecx
+	jl .checkOtherCollision
+
+	; ball.y + ball.r <= pedal.y + pedal.height
+	;mov edx, [ball.y]
+	;add edx, [ball.copyR]
+	mov ecx, [pedal_l.y]
+	add ecx, [pedal.height]
+	cmp edx, ecx
+	jg .checkOtherCollision
+
+	jmp .performLeftBounce
+
+	.checkOtherCollision:
+	; ball.y - ball.r >= pedal.y
+	mov edx, [ball.y]
+	sub edx, [ball.copyR]
+	mov ecx, [pedal_l.y]
+	cmp edx, ecx
+	jl .skipCollision
+
+	; ball.y - ball.r <= pedal.y + pedal.height
+	;mov edx, [ball.y]
+	;sub edx, [ball.copyR]
+	mov ecx, [pedal_l.y]
+	add ecx, [pedal.height]
+	cmp edx, ecx
+	jg .skipCollision
+
+	.performLeftBounce:
+		mov cl, 0
+		mov [ball.moveX], cl
+
+	.skipCollision:
+		; Collision Skipped
 	ret
 
 UpdateWindowSize:
@@ -184,7 +241,7 @@ section '.data' writeable
 windowSize:
 	.width:  dd 800
 	.height: dd 450
-pedal:
+pedal: ; Key Note: paddle is being drawn from the start position to DOWN, so pedal.y is always the top location of paddle
 	.width:  dd 20
 	.height: dd 120
 pedal_l:
@@ -199,7 +256,7 @@ ball:
 	.r: dd 15.0
 	.copyR: dd 15 ; Has to be the same as .r
 	.moveX: db 1 ; 1 = Moves Left, 0 = Moves Right
-	.moveY: db 0; 1 = Moves Up, 0 = Moves Down
+	.moveY: db 1; 1 = Moves Up, 0 = Moves Down
 	.moveSpeed: dd 5 ; Movement speed of the ball, for easier changing
 
 section '.rodata'
