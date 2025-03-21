@@ -196,7 +196,48 @@ HandleBallLogic:
 		; Skipped
 
 	call CheckLeftPaddleCollision
+	call CheckRightPaddleCollision
 
+	ret
+
+CheckRightPaddleCollision:
+	mov edx, [ball.x]
+	add edx, [ball.copyR]
+	mov ecx, [pedal_r.x]
+	cmp edx, ecx
+	jl .skipRightCollision
+
+	mov edx, [ball.y]
+	add edx, [ball.copyR]
+	mov ecx, [pedal_r.y]
+	cmp edx, ecx
+	jl .checkOtherRightCollision
+
+	mov ecx, [pedal_r.y]
+	add ecx, [pedal.height]
+	cmp edx, ecx
+	jg .checkOtherRightCollision
+
+	jmp .performRightBounce
+
+	.checkOtherRightCollision:
+	mov edx, [ball.y]
+	sub edx, [ball.copyR]
+	mov ecx, [pedal_r.y]
+	cmp edx, ecx
+	jl .skipRightCollision
+
+	mov ecx, [pedal_r.y]
+	add ecx, [pedal.height]
+	cmp edx, ecx
+	jg .skipRightCollision
+
+	.performRightBounce:
+		mov cl, 1
+		mov [ball.moveX], cl
+
+	.skipRightCollision:
+		; Collision Skipped
 	ret
 
 CheckLeftPaddleCollision:
