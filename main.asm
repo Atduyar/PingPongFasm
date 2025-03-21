@@ -80,6 +80,14 @@ DrawPedal:
 	mov rcx, [pedal.height]
 	mov r8, [pico.7]
 	call DrawRectangle
+
+	; Drawing the second pedal
+	mov rdi, [pedal_r.x]
+	mov rsi, [pedal_r.y]
+	mov rdx, [pedal.width]
+	mov rcx, [pedal.height]
+	mov r8, [pico.9]
+	call DrawRectangle
 	ret
 
 DrawBall:
@@ -109,6 +117,24 @@ HandlePedalLogic:
 	je .EndPressUp
 	sub qword[pedal_l.y], 5
 	.EndPressUp:
+
+	; Checking for the right pedal
+	mov rdi, [ratlibKeyboardKey.KEY_S]
+	call IsKeyDown
+
+	test al, al
+	je .endPressDownRight
+	add qword[pedal_r.y], 5
+	.endPressDownRight:
+
+	mov rdi, [ratlibKeyboardKey.KEY_W]
+	call IsKeyDown
+
+	test al, al
+	je .endPressUpRight
+	sub qword[pedal_r.y], 5
+	.endPressUpRight:
+
 	ret
 
 HandleBallMovement:
@@ -248,8 +274,8 @@ pedal_l:
 	.x: dd 10
 	.y: dd 30
 pedal_r:
-	.x: dd 10
-	.y: dd 400
+	.x: dd 750
+	.y: dd 320
 ball:
 	.x: dd 400
 	.y: dd 225
