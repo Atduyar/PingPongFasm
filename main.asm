@@ -119,11 +119,11 @@ HandleBallMovement:
 	mov cl, [ball.moveX]
 	test cl, cl ; Is cl == 0?
 	jnz .updateBallPositionMoveLeft ; Not? Okay, move left
-	;add qword[ball.x], rsi ; Yes? Okay, move right
+	add qword[ball.x], rsi ; Yes? Okay, move right
 	jmp .updateBallPositionMoveLeftEnd
 
 	.updateBallPositionMoveLeft:
-		;sub qword[ball.x], rsi
+		sub qword[ball.x], rsi
 	.updateBallPositionMoveLeftEnd:
 
 	; This part handles moving on Y axis (up/down)
