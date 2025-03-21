@@ -111,25 +111,25 @@ HandlePedalLogic:
 	.EndPressUp:
 	ret
 
-HandleBallLogic:
+HandleBallMovement:
 	; This part handles moving on X axis (left/right)
-
 	mov rsi, [ball.moveSpeed] ; We hold movement speed in rsi so we can reuse it later
 
-	mov al, [ball.moveX]
-	test al, al ; Is al == 0?
+	; Switched to using cl instead of al
+	mov cl, [ball.moveX]
+	test cl, cl ; Is cl == 0?
 	jnz .updateBallPositionMoveLeft ; Not? Okay, move left
-	add qword[ball.x], rsi ; Yes? Okay, move right
+	;add qword[ball.x], rsi ; Yes? Okay, move right
 	jmp .updateBallPositionMoveLeftEnd
 
 	.updateBallPositionMoveLeft:
-		sub qword[ball.x], rsi
+		;sub qword[ball.x], rsi
 	.updateBallPositionMoveLeftEnd:
 
 	; This part handles moving on Y axis (up/down)
 
-	mov al, [ball.moveY]
-	test al, al ; Is al == 0?
+	mov cl, [ball.moveY]
+	test cl, cl ; Is cl == 0?
 	jnz .updateBallPositionMoveUp ; Not? Okay, move up
 	add qword[ball.y], rsi ; Yes? Okay, move down
 	jmp .updateBallPositionMoveUpEnd
@@ -137,6 +137,38 @@ HandleBallLogic:
 	.updateBallPositionMoveUp:
 		sub qword[ball.y], rsi
 	.updateBallPositionMoveUpEnd:
+	ret
+
+HandleBallLogic:
+	call HandleBallMovement
+
+	mov edx, [ball.y]
+	sub edx, [ball.copyR] ; If I use ball.r instead of copyR, stuff breaks... I AM LOST
+
+	cmp edx, 0 ; Is ball hitting the ceiling?
+	jg .skipUpperBounce ; No? Skip Bounce
+
+	; Yes? Bounce Off
+	mov cl, 0
+	mov [ball.moveY], cl
+
+	.skipUpperBounce:
+		; Skipped
+
+	; Add Ball's Radius twice since we are going from the top of the hitbox to the bottom
+	add edx, [ball.copyR] ; If I use ball.r instead of copyR, stuff breaks... I AM LOST
+	add edx, [ball.copyR] ; If I use ball.r instead of copyR, stuff breaks... I AM LOST
+
+	cmp edx, [windowSize.height] ; Is ball hitting the floor?
+	jl .skipLowerBounce ; No? Skip Bounce
+
+	; Yes? Bounce Off
+	mov cl, 1
+	mov [ball.moveY], cl
+
+	.skipLowerBounce:
+		; Skipped
+
 	ret
 
 UpdateWindowSize:
@@ -165,8 +197,9 @@ ball:
 	.x: dd 400
 	.y: dd 225
 	.r: dd 15.0
-	.moveX: db 0 ; 1 = Moves Left, 0 = Moves Right
-	.moveY: db 1 ; 1 = Moves Up, 0 = Moves Down
+	.copyR: dd 15 ; Has to be the same as .r
+	.moveX: db 1 ; 1 = Moves Left, 0 = Moves Right
+	.moveY: db 0; 1 = Moves Up, 0 = Moves Down
 	.moveSpeed: dd 5 ; Movement speed of the ball, for easier changing
 
 section '.rodata'
