@@ -20,6 +20,7 @@ extrn DrawRectangle
 extrn DrawCircle
 extrn EndDrawing
 extrn CloseWindow
+extrn DrawText
 
 section '.text' executable
 public _start
@@ -59,6 +60,7 @@ _start:
 	call HandleBallLogic
 
 	; Draws
+	call DrawScore
 	call DrawPedal
 	call DrawBall
 
@@ -98,6 +100,39 @@ DrawBall:
 	mov rdx, [pico.8]
 	call DrawCircle
 	ret
+
+RestartGame:
+
+	; xor eax, eax
+    ; mov [score.left], eax
+    ; mov [score.right], eax
+    ; mov qword [ball.x], 400
+    ; mov qword [ball.y], 225
+	; ret
+
+DrawScore:
+	mov rdi, score.right
+	mov rsi, [windowSize.width]
+	shr rsi, 1
+	mov rdx, 60
+	mov rcx, 40
+	mov r8, [pico.12]
+	call DrawText
+
+	mov rdi, score.left
+	mov rsi, [windowSize.width]
+	shr rsi, 1
+	sub rsi, 40
+	mov rdx, 60
+	mov rcx, 40
+	mov r8, [pico.12]
+	call DrawText
+
+	ret
+
+;add byte[score.left], 1
+;RLAPI void DrawText(const char *text, int posX, int posY, int fontSize, Color color);
+
 
 HandlePedalLogic:
 	;bool IsKeyPressed(int key);                             // Check if a key has been pressed once
@@ -195,8 +230,10 @@ HandleBallLogic:
 	.skipLowerBounce:
 		; Skipped
 
+	;call CheckPlayerScreenPosition
 	call CheckLeftPaddleCollision
 	call CheckRightPaddleCollision
+
 
 	ret
 
@@ -295,6 +332,50 @@ CheckLeftPaddleCollision:
 		; Collision Skipped
 	ret
 
+; CheckPlayerScreenPosition:
+;TO BE DONE, I have no will for this rn
+
+; 	;Check for left hit:
+; 	mov rax, [ball.x]
+; 	cmp rax, 0
+; 	jg .noLeftHit
+;     inc [score.right]
+;     jmp .RightScreenBounce
+; 	cmp	[score.left], 56
+; 	jge .leftWin
+; 	.noLeftHit:
+
+; 	;Check for right hit:
+; 	mov eax, [ball.x]
+; 	add eax, [ball.r] ;Take radius into consideration
+; 	cmp eax, 400
+; 	jl .noRightHit
+;     inc [score.left]
+;     jmp .LeftScreenBounce
+; 	cmp [score.right], 56
+; 	jge .rightWin
+; 	.noRightHit:
+
+; 	.leftWin:
+; 		mov rax, [ball.moveSpeed]
+; 		mov [ball.moveSpeed], rax
+
+
+
+; 	.rightWin:
+	
+
+; 	.LeftScreenBounce:
+; 		mov cl, 0
+; 		mov [ball.moveX], cl
+		
+
+; 	.RightScreenBounce:
+; 		mov cl, 1
+; 		mov [ball.moveX], cl
+
+; 	ret
+
 UpdateWindowSize:
 	;int GetScreenWidth(void);                                   // Get current screen width
 	call GetScreenWidth
@@ -305,6 +386,11 @@ UpdateWindowSize:
 	ret
 
 section '.data' writeable
+score:
+	.left db 48,0
+	.right db 48,0
+	.max dd 10
+	.fix db 1,2,3,4
 windowSize:
 	.width:  dd 800
 	.height: dd 450
@@ -325,6 +411,7 @@ ball:
 	.moveX: db 1 ; 1 = Moves Left, 0 = Moves Right
 	.moveY: db 1; 1 = Moves Up, 0 = Moves Down
 	.moveSpeed: dd 5 ; Movement speed of the ball, for easier changing
+
 
 section '.rodata'
 print_int: db "test: %d",10,0
