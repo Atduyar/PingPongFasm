@@ -141,7 +141,7 @@ HandlePedalLogic:
 
 	test al, al
 	je .EndPressDown
-	add qword[pedal_l.y], 5
+	add qword[pedal_r.y], 5
 	.EndPressDown:
 
 	;bool IsKeyPressed(int key);                             // Check if a key has been pressed once
@@ -150,7 +150,7 @@ HandlePedalLogic:
 
 	test al, al
 	je .EndPressUp
-	sub qword[pedal_l.y], 5
+	sub qword[pedal_r.y], 5
 	.EndPressUp:
 
 	; Checking for the right pedal
@@ -159,7 +159,7 @@ HandlePedalLogic:
 
 	test al, al
 	je .endPressDownRight
-	add qword[pedal_r.y], 5
+	add qword[pedal_l.y], 5
 	.endPressDownRight:
 
 	mov rdi, [ratlibKeyboardKey.KEY_W]
@@ -167,7 +167,7 @@ HandlePedalLogic:
 
 	test al, al
 	je .endPressUpRight
-	sub qword[pedal_r.y], 5
+	sub qword[pedal_l.y], 5
 	.endPressUpRight:
 
 	ret
