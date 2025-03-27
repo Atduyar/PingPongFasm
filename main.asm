@@ -142,6 +142,14 @@ HandlePedalLogic:
 	test al, al
 	je .EndPressDown
 	add qword[pedal_r.y], 5
+
+	mov eax, [pedal_r.y]
+	add eax, [pedal.height]
+	cmp eax, [windowSize.height]
+	jl .EndPressDown
+	mov eax, [windowSize.height]
+	sub eax, [pedal.height]
+	mov dword[pedal_r.y], eax
 	.EndPressDown:
 
 	;bool IsKeyPressed(int key);                             // Check if a key has been pressed once
@@ -151,6 +159,11 @@ HandlePedalLogic:
 	test al, al
 	je .EndPressUp
 	sub qword[pedal_r.y], 5
+
+	mov eax, [pedal_r.y]
+	cmp eax, 0
+	jg .EndPressUp
+	mov dword[pedal_r.y], 0
 	.EndPressUp:
 
 	; Checking for the right pedal
@@ -158,17 +171,30 @@ HandlePedalLogic:
 	call IsKeyDown
 
 	test al, al
-	je .endPressDownRight
+	je .EndPressDownRight
 	add qword[pedal_l.y], 5
-	.endPressDownRight:
+
+	mov eax, [pedal_l.y]
+	add eax, [pedal.height]
+	cmp eax, [windowSize.height]
+	jl .EndPressDownRight
+	mov eax, [windowSize.height]
+	sub eax, [pedal.height]
+	mov dword[pedal_l.y], eax
+	.EndPressDownRight:
 
 	mov rdi, [ratlibKeyboardKey.KEY_W]
 	call IsKeyDown
 
 	test al, al
-	je .endPressUpRight
-	sub qword[pedal_l.y], 5
-	.endPressUpRight:
+	je .EndPressUpRight
+	sub dword[pedal_l.y], 5
+
+	mov eax, [pedal_l.y]
+	cmp eax, 0
+	jg .EndPressUpRight
+	mov dword[pedal_l.y], 0
+	.EndPressUpRight:
 
 	ret
 
