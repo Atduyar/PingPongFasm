@@ -270,6 +270,17 @@ CheckRightPaddleCollision:
 	cmp edx, ecx
 	jl .skipRightCollision
 
+	mov edx, [ball.x]
+	add edx, [ball.copyR]
+
+	mov edi, [pedal.width]
+	shr edi, 1 ; Should divide by 2
+
+	mov ecx, [pedal_r.x]
+	add ecx, edi
+	cmp edx, ecx
+	jg .skipRightCollision
+
 	mov edx, [ball.y]
 	add edx, [ball.copyR]
 	mov ecx, [pedal_r.y]
@@ -309,13 +320,26 @@ CheckLeftPaddleCollision:
 	; (ball.y + ball.r >= pedal.y && ball.y + ball.r <= pedal.y + pedal.height) ||
 	; (ball.y - ball.r >= pedal.y && ball.y - ball.r <= pedal.y + pedal.height)
 
-	; ball.x - ball.r <= paddle.x + paddle.width
+	; ball.x - ball.r <= paddle.x + paddle.width (RIGHT SIDE OF THE PEDAL)
 	mov edx, [ball.x]
 	sub edx, [ball.copyR]
 	mov ecx, [pedal_l.x]
 	add ecx, [pedal.width]
 	cmp edx, ecx
 	jg .skipCollision
+
+	; ball.x - ball.r >= paddle.x + (paddle.width / 2)
+	; The collision will only happen if the leftmost position of the ball is between the center and the rightmost position of the paddle
+	mov edx, [ball.x]
+	sub edx, [ball.copyR]
+
+	mov edi, [pedal.width]
+	shr edi, 1 ; Should divide by 2?
+
+	mov ecx, [pedal_l.x]
+	add ecx, edi
+	cmp edx, ecx
+	jl .skipCollision
 
 	; ball.y + ball.r >= pedal.y
 	mov edx, [ball.y]
