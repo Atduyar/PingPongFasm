@@ -58,6 +58,7 @@ _start:
 	call UpdateWindowSize
 	call HandlePedalLogic
 	call HandleBallLogic
+	call CheckPlayerScreenCollision
 
 	; Draws
 	call DrawScore
@@ -256,7 +257,6 @@ HandleBallLogic:
 	.skipLowerBounce:
 		; Skipped
 
-	;call CheckPlayerScreenPosition
 	call CheckLeftPaddleCollision
 	call CheckRightPaddleCollision
 
@@ -382,49 +382,57 @@ CheckLeftPaddleCollision:
 		; Collision Skipped
 	ret
 
-; CheckPlayerScreenPosition:
-;TO BE DONE, I have no will for this rn
-
-; 	;Check for left hit:
-; 	mov rax, [ball.x]
-; 	cmp rax, 0
-; 	jg .noLeftHit
-;     inc [score.right]
-;     jmp .RightScreenBounce
-; 	cmp	[score.left], 56
-; 	jge .leftWin
-; 	.noLeftHit:
-
-; 	;Check for right hit:
-; 	mov eax, [ball.x]
-; 	add eax, [ball.r] ;Take radius into consideration
-; 	cmp eax, 400
-; 	jl .noRightHit
-;     inc [score.left]
-;     jmp .LeftScreenBounce
-; 	cmp [score.right], 56
-; 	jge .rightWin
-; 	.noRightHit:
-
-; 	.leftWin:
-; 		mov rax, [ball.moveSpeed]
-; 		mov [ball.moveSpeed], rax
+CheckPlayerScreenCollision:
 
 
+	mov edx, [ball.x]
+	sub edx, [ball.copyR]
+	mov ecx, 0
+	cmp edx, ecx
+	jg .noLeftHit
+    inc [score.right]
+    call ResetBall
+	call .checkForWin
+	ret
+	.noLeftHit:
 
-; 	.rightWin:
-	
+	mov edx, [ball.x]
+	add edx, [ball.copyR]
+	mov ecx, [windowSize.width]
+	cmp edx, ecx
+	jl .noRightHit
+	inc [score.left]
+	call ResetBall
+	.noRightHit:
+	ret
 
-; 	.LeftScreenBounce:
-; 		mov cl, 0
-; 		mov [ball.moveX], cl
-		
+	.checkForWin:
+	mov al, [score.right]
+	cmp al, [score.max]
+	je .leftWin
+	ret
+	mov bl, [score.left]
+	cmp bl, [score.max]
+	je .rightWin
+	ret
 
-; 	.RightScreenBounce:
-; 		mov cl, 1
-; 		mov [ball.moveX], cl
 
-; 	ret
+	.leftWin:
+	mov dword[ball.moveSpeed], 0
+	ret
+
+	.rightWin:
+	mov dword[ball.moveSpeed], 0
+	ret
+;todo:
+;direction randomiser
+;win/lose score
+
+
+ResetBall:
+	mov dword[ball.x], 400
+	mov dword[ball.y], 225
+	ret
 
 UpdateWindowSize:
 	;int GetScreenWidth(void);                                   // Get current screen width
@@ -437,9 +445,9 @@ UpdateWindowSize:
 
 section '.data' writeable
 score:
-	.left db 48,0
-	.right db 48,0
-	.max dd 10
+	.left db 48,0 ;0
+	.right db 48,0 ;0
+	.max db 57,0 ;9
 	.fix db 1,2,3,4
 windowSize:
 	.width:  dd 800
