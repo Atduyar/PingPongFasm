@@ -259,8 +259,6 @@ HandleBallLogic:
 
 	call CheckLeftPaddleCollision
 	call CheckRightPaddleCollision
-
-
 	ret
 
 CheckRightPaddleCollision:
@@ -315,7 +313,6 @@ CheckRightPaddleCollision:
 	ret
 
 CheckLeftPaddleCollision:
-
 	; if ball.x - ball.r <= paddle.x + paddle.width &&
 	; (ball.y + ball.r >= pedal.y && ball.y + ball.r <= pedal.y + pedal.height) ||
 	; (ball.y - ball.r >= pedal.y && ball.y - ball.r <= pedal.y + pedal.height)
@@ -383,17 +380,13 @@ CheckLeftPaddleCollision:
 	ret
 
 CheckPlayerScreenCollision:
-
-
 	mov edx, [ball.x]
 	sub edx, [ball.copyR]
 	mov ecx, 0
 	cmp edx, ecx
 	jg .noLeftHit
-    inc [score.right]
-    call ResetBall
-	call .checkForWin
-	ret
+    inc dword[score.right]
+	jmp .checkForWin
 	.noLeftHit:
 
 	mov edx, [ball.x]
@@ -401,27 +394,26 @@ CheckPlayerScreenCollision:
 	mov ecx, [windowSize.width]
 	cmp edx, ecx
 	jl .noRightHit
-	inc [score.left]
-	call ResetBall
+	inc dword[score.left]
+	jmp .checkForWin
 	.noRightHit:
 	ret
 
 	.checkForWin:
-	mov al, [score.right]
-	cmp al, [score.max]
-	je .leftWin
-	ret
-	mov bl, [score.left]
-	cmp bl, [score.max]
-	je .rightWin
+	call ResetBall
+	movsx eax, byte[score.right]
+	cmp eax, dword[score.max]
+	; mov cl, [score.right]
+	; cmp cl, [score.max]
+	je .winFound
+	movsx eax, byte[score.left]
+	cmp eax, dword[score.max]
+	; mov cl, [score.left]
+	; cmp cl, [score.max]
+	je .winFound
 	ret
 
-
-	.leftWin:
-	mov dword[ball.moveSpeed], 0
-	ret
-
-	.rightWin:
+	.winFound:
 	mov dword[ball.moveSpeed], 0
 	ret
 ;todo:
@@ -445,10 +437,10 @@ UpdateWindowSize:
 
 section '.data' writeable
 score:
-	.left db 48,0 ;0
-	.right db 48,0 ;0
-	.max db 57,0 ;9
-	.fix db 1,2,3,4
+	.left: db 48, 0
+	.right: db 48, 0
+	.max: dd 58
+	.fix: db 1, 2, 3, 4
 windowSize:
 	.width:  dd 800
 	.height: dd 450
@@ -459,7 +451,7 @@ pedal_l:
 	.x: dd 10
 	.y: dd 30
 pedal_r:
-	.x: dd 750
+	.x: dd 770
 	.y: dd 320
 ball:
 	.x: dd 400
