@@ -59,6 +59,7 @@ _start:
 	call HandlePedalLogic
 	call HandleBallLogic
 	call CheckPlayerScreenCollision
+	call ResetGame
 
 	; Draws
 	call DrawScore
@@ -101,15 +102,6 @@ DrawBall:
 	mov rdx, [pico.8]
 	call DrawCircle
 	ret
-
-RestartGame:
-
-	; xor eax, eax
-    ; mov [score.left], eax
-    ; mov [score.right], eax
-    ; mov qword [ball.x], 400
-    ; mov qword [ball.y], 225
-	; ret
 
 DrawScore:
 	mov rdi, score.right
@@ -403,28 +395,37 @@ CheckPlayerScreenCollision:
 	call ResetBall
 	movsx eax, byte[score.right]
 	cmp eax, dword[score.max]
-	; mov cl, [score.right]
-	; cmp cl, [score.max]
-	je .winFound
+	je .rightWinner
 	movsx eax, byte[score.left]
 	cmp eax, dword[score.max]
-	; mov cl, [score.left]
-	; cmp cl, [score.max]
-	je .winFound
+	je .leftWinner
 	ret
 
-	.winFound:
+	.leftWinner:
 	mov dword[ball.moveSpeed], 0
+	mov rax, '<-Win'
+	mov [score.left], rax
 	ret
-;todo:
-;direction randomiser
-;win/lose score
+
+	.rightWinner:
+	mov dword[ball.moveSpeed], 0
+	mov rax, 'Win->'
+	mov [score.right], rax
+	ret
 
 
 ResetBall:
 	mov dword[ball.x], 400
 	mov dword[ball.y], 225
 	ret
+
+ResetGame:
+	mov rdi, [ratlibKeyboardKey.KEY_R]
+	call IsKeyDown
+	test al, al
+	je .EndPressDown
+	;TBD
+	.EndPressDown:
 
 UpdateWindowSize:
 	;int GetScreenWidth(void);                                   // Get current screen width
