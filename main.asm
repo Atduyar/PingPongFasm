@@ -424,7 +424,17 @@ ResetGame:
 	call IsKeyDown
 	test al, al
 	je .EndPressDown
-	;TBD
+	mov dword[ball.x], 400
+	mov dword[ball.y], 225
+	mov dword[ball.moveSpeed], 5
+	;Resetting the left score from ASCII
+	mov al, 48
+	mov [score.left], al
+	mov byte [score.left + 1], 0
+	;Resetting the right score from ASCII
+	mov al, 48
+	mov [score.right], al
+	mov byte [score.right + 1], 0
 	.EndPressDown:
 
 UpdateWindowSize:
