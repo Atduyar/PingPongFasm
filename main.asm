@@ -405,12 +405,14 @@ CheckPlayerScreenCollision:
 	mov dword[ball.moveSpeed], 0
 	mov rax, '<-Win'
 	mov [score.left], rax
+	;mov byte[score.right], 0
 	ret
 
 	.rightWinner:
 	mov dword[ball.moveSpeed], 0
 	mov rax, 'Win->'
 	mov [score.right], rax
+	mov byte[score.left], 0
 	ret
 
 
@@ -424,18 +426,23 @@ ResetGame:
 	call IsKeyDown
 	test al, al
 	je .EndPressDown
+	;Ball reset:
 	mov dword[ball.x], 400
 	mov dword[ball.y], 225
 	mov dword[ball.moveSpeed], 5
+	;Pedal reset:
+	mov dword[pedal_l.x], 10
+	mov dword[pedal_l.y], 130
+	mov dword[pedal_r.x], 770
+	mov dword[pedal_r.y], 130
 	;Resetting the left score from ASCII
-	mov al, 48
-	mov [score.left], al
+	mov byte [score.left], 48
 	mov byte [score.left + 1], 0
 	;Resetting the right score from ASCII
-	mov al, 48
-	mov [score.right], al
+	mov byte [score.right], 48
 	mov byte [score.right + 1], 0
 	.EndPressDown:
+	ret
 
 UpdateWindowSize:
 	;int GetScreenWidth(void);                                   // Get current screen width
@@ -451,7 +458,7 @@ score:
 	.left: db 48, 0
 	.right: db 48, 0
 	.max: dd 58
-	.fix: db 1, 2, 3, 4
+	.fixVar: db 1, 2, 3, 4
 windowSize:
 	.width:  dd 800
 	.height: dd 450
@@ -460,10 +467,10 @@ pedal: ; Key Note: paddle is being drawn from the start position to DOWN, so ped
 	.height: dd 120
 pedal_l:
 	.x: dd 10
-	.y: dd 30
+	.y: dd 130
 pedal_r:
 	.x: dd 770
-	.y: dd 320
+	.y: dd 130
 ball:
 	.x: dd 400
 	.y: dd 225
