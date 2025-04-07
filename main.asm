@@ -393,19 +393,12 @@ CheckPlayerScreenCollision:
 
 	.checkForWin:
 	call ResetBall
-	movsx eax, byte[score.right]
-	cmp eax, dword[score.max]
+	mov al, byte[score.right]
+	cmp al, byte[score.max]
 	je .rightWinner
-	movsx eax, byte[score.left]
-	cmp eax, dword[score.max]
+	mov al, byte[score.left]
+	cmp al, byte[score.max]
 	je .leftWinner
-	ret
-
-	.leftWinner:
-	mov dword[ball.moveSpeed], 0
-	mov rax, '<-Win'
-	mov [score.left], rax
-	;mov byte[score.right], 0
 	ret
 
 	.rightWinner:
@@ -415,6 +408,14 @@ CheckPlayerScreenCollision:
 	mov byte[score.left], 0
 	ret
 
+	.leftWinner:
+	mov dword[ball.moveSpeed], 0
+	mov rax, '<-Win'
+	mov [score.left], rax
+	mov byte[score.right], 0
+	ret
+
+	
 
 ResetBall:
 	mov dword[ball.x], 400
@@ -441,6 +442,7 @@ ResetGame:
 	;Resetting the right score from ASCII
 	mov byte [score.right], 48
 	mov byte [score.right + 1], 0
+	mov byte [score.max], 58
 	.EndPressDown:
 	ret
 
