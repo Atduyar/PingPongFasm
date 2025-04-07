@@ -121,6 +121,32 @@ DrawScore:
 	mov r8, [pico.12]
 	call DrawText
 
+	mov al, byte[score.right]
+	cmp al, byte[score.max]
+	jge .rightWinner
+	mov al, byte[score.left]
+	cmp al, byte[score.max]
+	jge .leftWinner
+	ret
+
+	.leftWinner:
+	mov rdi, victoryTextLeft
+	mov rsi, [windowSize.width]
+	sub rsi, 600
+	mov rdx, 110
+	mov rcx, 40
+	mov r8, [pico.12]
+	call DrawText
+	ret
+
+	.rightWinner:
+	mov rdi, victoryTextRight
+	mov rsi, [windowSize.width]
+	sub rsi, 600
+	mov rdx, 110
+	mov rcx, 40
+	mov r8, [pico.12]
+	call DrawText
 	ret
 
 ;add byte[score.left], 1
@@ -223,7 +249,7 @@ HandleBallLogic:
 	call HandleBallMovement
 
 	mov edx, [ball.y]
-	sub edx, [ball.copyR] ; If I use ball.r instead of copyR, stuff breaks... I AM LOST
+	sub edx, [ball.copyR]
 
 	cmp edx, 0 ; Is ball hitting the ceiling?
 	jg .skipUpperBounce ; No? Skip Bounce
@@ -236,8 +262,8 @@ HandleBallLogic:
 		; Skipped
 
 	; Add Ball's Radius twice since we are going from the top of the hitbox to the bottom
-	add edx, [ball.copyR] ; If I use ball.r instead of copyR, stuff breaks... I AM LOST
-	add edx, [ball.copyR] ; If I use ball.r instead of copyR, stuff breaks... I AM LOST
+	add edx, [ball.copyR]
+	add edx, [ball.copyR]
 
 	cmp edx, [windowSize.height] ; Is ball hitting the floor?
 	jl .skipLowerBounce ; No? Skip Bounce
@@ -305,6 +331,7 @@ CheckRightPaddleCollision:
 	ret
 
 CheckLeftPaddleCollision:
+	;Collision detection sample:
 	; if ball.x - ball.r <= paddle.x + paddle.width &&
 	; (ball.y + ball.r >= pedal.y && ball.y + ball.r <= pedal.y + pedal.height) ||
 	; (ball.y - ball.r >= pedal.y && ball.y - ball.r <= pedal.y + pedal.height)
@@ -338,8 +365,6 @@ CheckLeftPaddleCollision:
 	jl .checkOtherCollision
 
 	; ball.y + ball.r <= pedal.y + pedal.height
-	;mov edx, [ball.y]
-	;add edx, [ball.copyR]
 	mov ecx, [pedal_l.y]
 	add ecx, [pedal.height]
 	cmp edx, ecx
@@ -356,8 +381,6 @@ CheckLeftPaddleCollision:
 	jl .skipCollision
 
 	; ball.y - ball.r <= pedal.y + pedal.height
-	;mov edx, [ball.y]
-	;sub edx, [ball.copyR]
 	mov ecx, [pedal_l.y]
 	add ecx, [pedal.height]
 	cmp edx, ecx
@@ -403,19 +426,14 @@ CheckPlayerScreenCollision:
 
 	.rightWinner:
 	mov dword[ball.moveSpeed], 0
-	mov rax, 'Win->'
-	mov [score.right], rax
-	mov byte[score.left], 0
+	mov byte[score.right], 'W'
 	ret
 
 	.leftWinner:
 	mov dword[ball.moveSpeed], 0
-	mov rax, '<-Win'
-	mov [score.left], rax
-	mov byte[score.right], 0
+	mov byte[score.left], 'W'
 	ret
 
-	
 
 ResetBall:
 	mov dword[ball.x], 400
@@ -438,10 +456,8 @@ ResetGame:
 	mov dword[pedal_r.y], 130
 	;Resetting the left score from ASCII
 	mov byte [score.left], 48
-	mov byte [score.left + 1], 0
 	;Resetting the right score from ASCII
 	mov byte [score.right], 48
-	mov byte [score.right + 1], 0
 	mov byte [score.max], 58
 	.EndPressDown:
 	ret
@@ -485,6 +501,9 @@ ball:
 
 section '.rodata'
 print_int: db "test: %d",10,0
+;For winner announcement:
+victoryTextLeft db 'Left Player Won', 0
+victoryTextRight db 'Right Player Won', 0
 windowTitle: db "Ping Ping FASM",0
 	; pico-8 color palet https://lospec.com/palette-list/pico-8
 	; adjusted for big-endian (a, b, g, r)
