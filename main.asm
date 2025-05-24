@@ -54,6 +54,19 @@ _start:
 	mov rdi, [pico.2]
 	call ClearBackground
 
+	; PART ADDED FOR MAIN MENU
+
+	call MainMenuChecks
+	mov bl, [game_info.started]
+	cmp bl, 0
+	je .displayMainMenu ; If started == 0 then jump to drawing the main display
+
+	mov al, [game_info.isHuman]
+	cmp al, 0 ; This is true if player wants to play with AI
+	je .mainGameLoopEnd ; Here, you can call / jump to your AI stuff
+
+	; END OF THE PART ADDED FOR MAIN MENU
+
 	; Updates
 	call UpdateWindowSize
 	call HandlePedalLogic
@@ -66,15 +79,63 @@ _start:
 	call DrawPedal
 	call DrawBall
 
+	.endDrawing:
+
 	;void EndDrawing(void);                                      // End canvas drawing and swap buffers (double buffering)
 	call EndDrawing
 
 	jmp .mainGameLoopStart
+
+	.displayMainMenu:
+	mov rdi, mainMenuTextTop
+	mov rsi, 0
+	mov rdx, 60
+	mov rcx, 40
+	mov r8, [pico.12]
+	call DrawText
+
+	mov rdi, mainMenuTextBottom
+	mov rsi, 0
+	mov rdx, 120
+	mov rcx, 40
+	mov r8, [pico.12]
+	call DrawText
+
+	jmp .endDrawing
+
 	.mainGameLoopEnd:
 
 	call CloseWindow
 	mov rdi, 0
 	call _exit
+
+MainMenuChecks:
+	mov rdi, [ratlibKeyboardKey.KEY_P]
+	call IsKeyDown
+
+	test al, al
+	je .checkAI
+	mov cl, 1
+	mov [game_info.started], cl
+	mov [game_info.isHuman], cl
+	je .returnPoint
+	; Above code sets started = isHuman = 1
+
+
+	.checkAI:
+	mov rdi, [ratlibKeyboardKey.KEY_I]
+	call IsKeyDown
+
+	test al, al
+	je .returnPoint
+	mov cl, 1
+	mov [game_info.started], cl
+	mov cl, 0
+	mov [game_info.isHuman], cl
+	; Code above sets only srated = 1, isHuman is in this case = 0
+
+	.returnPoint:
+	ret
 
 DrawPedal:
 	;void DrawRectangleLines(int posX, int posY, int width, int height, Color color);                   // Draw rectangle outline
@@ -178,14 +239,15 @@ HandlePedalLogic:
 	test al, al
 	je .EndPressUp
 	sub qword[pedal_r.y], 5
-
+	; Bio je EAX
 	mov eax, [pedal_r.y]
-	cmp eax, 0
+	test eax, eax
+	; cmp eax, 0
 	jg .EndPressUp
 	mov dword[pedal_r.y], 0
 	.EndPressUp:
 
-	; Checking for the right pedal
+	; Checking for the left pedal
 	mov rdi, [ratlibKeyboardKey.KEY_S]
 	call IsKeyDown
 
@@ -438,6 +500,7 @@ CheckPlayerScreenCollision:
 ResetBall:
 	mov dword[ball.x], 400
 	mov dword[ball.y], 225
+	mov dword[ball.moveSpeed], 5
 	ret
 
 ResetGame:
@@ -446,9 +509,7 @@ ResetGame:
 	test al, al
 	je .EndPressDown
 	;Ball reset:
-	mov dword[ball.x], 400
-	mov dword[ball.y], 225
-	mov dword[ball.moveSpeed], 5
+	call ResetBall
 	;Pedal reset:
 	mov dword[pedal_l.x], 10
 	mov dword[pedal_l.y], 130
@@ -472,6 +533,9 @@ UpdateWindowSize:
 	ret
 
 section '.data' writeable
+game_info:
+	.started: db 0
+	.isHuman: db 0
 score:
 	.left: db 48, 0
 	.right: db 48, 0
@@ -489,6 +553,7 @@ pedal_l:
 pedal_r:
 	.x: dd 770
 	.y: dd 130
+; Whatever is below this line is affected by the right pedal's movement when it is on top, however only God knows why...
 ball:
 	.x: dd 400
 	.y: dd 225
@@ -498,12 +563,13 @@ ball:
 	.moveY: db 1; 1 = Moves Up, 0 = Moves Down
 	.moveSpeed: dd 5 ; Movement speed of the ball, for easier changing
 
-
 section '.rodata'
 print_int: db "test: %d",10,0
 ;For winner announcement:
 victoryTextLeft db 'Left Player Won', 0
 victoryTextRight db 'Right Player Won', 0
+mainMenuTextTop db 'Press P to play against Player', 0
+mainMenuTextBottom db 'Press I to play against AI', 0
 windowTitle: db "Ping Ping FASM",0
 	; pico-8 color palet https://lospec.com/palette-list/pico-8
 	; adjusted for big-endian (a, b, g, r)
