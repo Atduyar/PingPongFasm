@@ -21,10 +21,16 @@ extrn DrawCircle
 extrn EndDrawing
 extrn CloseWindow
 extrn DrawText
+extrn sss
+extrn SSSinit
+extrn SSSplayHit
+extrn SSSplayScore
+extrn SSSplayWin
 
 section '.text' executable
 public _start
 _start:
+	call SSSinit
 	;void SetConfigFlags(unsigned int flags);                    // Setup init configuration flags (view FLAGS)
 	mov rdi, 0
 	;or rdi, [raylibConfigFlags.FLAG_FULLSCREEN_MODE]
@@ -317,6 +323,7 @@ HandleBallLogic:
 	jg .skipUpperBounce ; No? Skip Bounce
 
 	; Yes? Bounce Off
+	call SSSplayHit
 	mov cl, 0
 	mov [ball.moveY], cl
 
@@ -331,6 +338,7 @@ HandleBallLogic:
 	jl .skipLowerBounce ; No? Skip Bounce
 
 	; Yes? Bounce Off
+	call SSSplayHit
 	mov cl, 1
 	mov [ball.moveY], cl
 
@@ -385,8 +393,9 @@ CheckRightPaddleCollision:
 	jg .skipRightCollision
 
 	.performRightBounce:
-		mov cl, 1
-		mov [ball.moveX], cl
+	mov cl, 1
+	mov [ball.moveX], cl
+	call SSSplayHit
 
 	.skipRightCollision:
 		; Collision Skipped
@@ -449,8 +458,9 @@ CheckLeftPaddleCollision:
 	jg .skipCollision
 
 	.performLeftBounce:
-		mov cl, 0
-		mov [ball.moveX], cl
+	mov cl, 0
+	mov [ball.moveX], cl
+	call SSSplayHit
 
 	.skipCollision:
 		; Collision Skipped
@@ -463,6 +473,7 @@ CheckPlayerScreenCollision:
 	cmp edx, ecx
 	jg .noLeftHit
     inc dword[score.right]
+	call SSSplayScore
 	jmp .checkForWin
 	.noLeftHit:
 
@@ -472,6 +483,7 @@ CheckPlayerScreenCollision:
 	cmp edx, ecx
 	jl .noRightHit
 	inc dword[score.left]
+	call SSSplayScore
 	jmp .checkForWin
 	.noRightHit:
 	ret
@@ -489,11 +501,13 @@ CheckPlayerScreenCollision:
 	.rightWinner:
 	mov dword[ball.moveSpeed], 0
 	mov byte[score.right], 'W'
+	call SSSplayWin
 	ret
 
 	.leftWinner:
 	mov dword[ball.moveSpeed], 0
 	mov byte[score.left], 'W'
+	call SSSplayHit
 	ret
 
 
@@ -568,8 +582,8 @@ print_int: db "test: %d",10,0
 ;For winner announcement:
 victoryTextLeft db 'Left Player Won', 0
 victoryTextRight db 'Right Player Won', 0
-mainMenuTextTop db 'Press P to play against Player', 0
-mainMenuTextBottom db 'Press I to play against AI', 0
+mainMenuTextTop db '  Press P to play against Player', 0
+mainMenuTextBottom db '  Press I to play against AI', 0
 windowTitle: db "Ping Ping FASM",0
 	; pico-8 color palet https://lospec.com/palette-list/pico-8
 	; adjusted for big-endian (a, b, g, r)
