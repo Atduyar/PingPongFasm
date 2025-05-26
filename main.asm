@@ -26,10 +26,13 @@ extrn SSSinit
 extrn SSSplayHit
 extrn SSSplayScore
 extrn SSSplayWin
+extrn createNN
+extrn runNN
 
 section '.text' executable
 public _start
 _start:
+	call createNN
 	call SSSinit
 	;void SetConfigFlags(unsigned int flags);                    // Setup init configuration flags (view FLAGS)
 	mov rdi, 0
@@ -67,9 +70,9 @@ _start:
 	cmp bl, 0
 	je .displayMainMenu ; If started == 0 then jump to drawing the main display
 
-	mov al, [game_info.isHuman]
-	cmp al, 0 ; This is true if player wants to play with AI
-	je .mainGameLoopEnd ; Here, you can call / jump to your AI stuff
+	; mov al, [game_info.isHuman]
+	; cmp al, 0 ; This is true if player wants to play with AI
+	; je .mainGameLoopEnd ; Here, you can call / jump to your AI stuff
 
 	; END OF THE PART ADDED FOR MAIN MENU
 
@@ -221,6 +224,63 @@ DrawScore:
 
 
 HandlePedalLogic:
+	push rbp          ; Save old base pointer
+    mov rbp, rsp      ; Set up new base pointer
+                      ; At this point, if HandlePedalLogic was called correctly,
+                      ; RSP was 16N+8. After 'push rbp', RSP became 16N.
+                      ; 'mov rbp, rsp' means RBP is 16N. RSP is also 16N.
+                      ; This is the correct alignment for calling another C function.
+
+    ; (Optional but good practice) Allocate space for local variables if needed,
+    ; keeping RSP 16-byte aligned. E.g., sub rsp, 16 (for 16 bytes of locals)
+	; IF AI
+
+	mov al, [game_info.isHuman]
+	cmp al, 0 ; This is true if player wants to play with AI
+	je .AIMove ; Here, you can call / jump to your AI stuff
+	jmp .AIEnd
+	.AIMove:
+
+	mov edi, [pedal_r.y]
+	mov esi, [pedal_l.y]
+	mov edx, [ball.x]
+	mov ecx, [ball.y]
+	; sar edi, 3
+	; sar esi, 3
+	; sar edx, 3
+	; sar ecx, 3
+	call runNN
+
+	test al, al
+	je .AIPressUp
+	add qword[pedal_r.y], 5
+
+	mov eax, [pedal_r.y]
+	add eax, [pedal.height]
+	cmp eax, [windowSize.height]
+	jl .AIEndPressDown
+	mov eax, [windowSize.height]
+	sub eax, [pedal.height]
+	mov dword[pedal_r.y], eax
+	.AIEndPressDown:
+	jmp .EndPressUp
+	.AIPressUp:
+
+	sub qword[pedal_r.y], 5
+	; Bio je EAX
+	mov eax, [pedal_r.y]
+	test eax, eax
+	; cmp eax, 0
+	jg .AIEndPressUp
+	mov dword[pedal_r.y], 0
+	.AIEndPressUp:
+
+	jmp .EndPressUp
+	.AIEnd:
+
+
+	; go to player movement
+
 	;bool IsKeyPressed(int key);                             // Check if a key has been pressed once
 	mov rdi, [ratlibKeyboardKey.KEY_DOWN]
 	call IsKeyDown
@@ -283,7 +343,10 @@ HandlePedalLogic:
 	mov dword[pedal_l.y], 0
 	.EndPressUpRight:
 
-	ret
+; Epilogue for HandlePedalLogic
+    mov rsp, rbp      ; Restore stack pointer
+    pop rbp           ; Restore old base pointer
+    ret
 
 HandleBallMovement:
 	; This part handles moving on X axis (left/right)
