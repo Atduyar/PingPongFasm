@@ -30,8 +30,8 @@ void SSSplayHit(){
     PlaySound(fxWav);
 }
 void SSSplayWin(){
-    PlaySound(fyWav);
+    PlaySound(fzWav);
 }
 void SSSplayScore(){
-    PlaySound(fzWav);
+    PlaySound(fyWav);
 }
